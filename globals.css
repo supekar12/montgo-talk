@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --color-montgo-blue: #0A2540;
+  --color-montgo-gold: #D4AF37;
+  --color-montgo-light: #F4F7F6;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+body {
+  background-color: var(--color-montgo-light);
+  color: #333;
+}
