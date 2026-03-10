@@ -28,7 +28,7 @@ export default function ChatDashboard() {
     setIsLoading(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://magnot-talk1.vercel.app";
       const response = await fetch(`${apiUrl}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -196,8 +196,8 @@ export default function ChatDashboard() {
                     <div
                       style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
                       className={`px-5 py-4 rounded-[20px] text-[17px] sm:text-[18px] leading-relaxed shadow-sm ${msg.role === "user"
-                          ? "bg-[#003366] text-white rounded-tr-sm"
-                          : "bg-white text-[#1e293b] border border-gray-200/60 rounded-tl-sm"
+                        ? "bg-[#003366] text-white rounded-tr-sm"
+                        : "bg-white text-[#1e293b] border border-gray-200/60 rounded-tl-sm"
                         }`}
                     >
                       {msg.content}
