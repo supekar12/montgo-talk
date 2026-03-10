@@ -36,16 +36,17 @@ export default function ChatDashboard() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to connect to backend");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || "Failed to connect to backend");
       }
 
       const data = await response.json();
       setMessages((prev) => [...prev, { role: "assistant", content: data.response }]);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Sorry, I am having trouble connecting to the city dashboard right now. Please try again later." }
+        { role: "assistant", content: `Connection Error: ${error.message}` }
       ]);
     } finally {
       setIsLoading(false);
