@@ -8,12 +8,7 @@ type Message = {
 };
 
 export default function ChatDashboard() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      content: "Hello! I am Montgo-Talk, the official AI assistant for the City of Montgomery, AL. I can help you with city services, alerts, contacts, and civic information. How may I assist you today?"
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -24,22 +19,19 @@ export default function ChatDashboard() {
     }
   }, [messages, isLoading]);
 
-  const sendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
+  const handleSend = async (text: string) => {
+    if (!text.trim() || isLoading) return;
 
-    const userMessage: Message = { role: "user", content: input };
+    const userMessage: Message = { role: "user", content: text };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
 
     try {
-      // Use environment variable for the backend API URL, fallback to localhost for local testing
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       const response = await fetch(`${apiUrl}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // Backend expects 'message' in the body but verify your specific endpoint payload
         body: JSON.stringify({ message: userMessage.content }),
       });
 
@@ -60,141 +52,211 @@ export default function ChatDashboard() {
     }
   };
 
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSend(input);
+  };
+
+  const commonRequests = [
+    {
+      title: "Find nearest Police/Fire Station",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-[#DEAC35]">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+        </svg>
+      ),
+      query: "Where is the nearest police or fire station?",
+    },
+    {
+      title: "Report a Pothole (311 Service)",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-[#DEAC35]">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3Z" />
+        </svg>
+      ),
+      query: "How do I report a pothole?",
+    },
+    {
+      title: "Check Garbage Pickup",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-[#DEAC35]">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+        </svg>
+      ),
+      query: "When is my garbage pickup?",
+    }
+  ];
+
   return (
-    <div className="relative flex flex-col h-screen w-full bg-slate-950 font-sans overflow-hidden text-slate-100">
-      {/* Dynamic Background Elements */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[120px] mix-blend-screen opacity-70 animate-pulse"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/10 rounded-full blur-[120px] mix-blend-screen opacity-50 animate-pulse delay-1000"></div>
-        <div className="absolute top-[40%] left-[20%] w-[30%] h-[30%] bg-indigo-500/10 rounded-full blur-[100px] mix-blend-screen opacity-40"></div>
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none mix-blend-overlay"></div>
-      </div>
+    <div className="flex flex-col h-screen w-full bg-[#f8f9fa] font-sans text-gray-800">
 
       {/* Header */}
-      <header className="relative z-10 w-full px-6 py-5 flex items-center justify-between border-b border-white/5 bg-slate-950/50 backdrop-blur-xl">
-        <div className="flex items-center gap-4">
-          <div className="relative flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 shadow-[0_0_20px_rgba(217,119,6,0.4)] text-slate-900 font-bold text-2xl tracking-tighter shrink-0 ring-1 ring-amber-300/50">
-            M
-            <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-black/10"></div>
+      <header className="w-full px-4 py-3 flex items-center justify-between bg-[#003366] text-white shadow-md z-10 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-[#DEAC35] flex items-center justify-center shrink-0 shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-7 h-7 text-[#003366]">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 0 1-.923 1.785A5.969 5.969 0 0 0 6 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337Z" />
+            </svg>
           </div>
-          <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-3">
-            <h1 className="text-2xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-100 to-slate-400 drop-shadow-sm">
-              Montgo-Talk
-            </h1>
-            <span className="hidden sm:inline-block w-1.5 h-1.5 rounded-full bg-slate-700"></span>
-            <p className="text-xs sm:text-sm font-medium text-slate-400 tracking-wide uppercase">
-              Civic Assistant • City of Montgomery, AL
-            </p>
+          <div className="flex flex-col">
+            <h1 className="text-[20px] font-bold leading-tight tracking-tight">Montgo-Talk</h1>
+            <p className="text-[13px] text-blue-200 font-medium">Civic Assistant</p>
           </div>
         </div>
 
-        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]">
-          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-          <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Online</span>
-        </div>
+        <button className="p-2 text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-7 h-7">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        </button>
       </header>
 
-      {/* Main Chat Area */}
-      <main className="relative z-10 flex-1 w-full max-w-5xl mx-auto overflow-y-auto px-4 py-8 scroll-smooth" ref={scrollRef}>
-        <div className="flex flex-col gap-6 justify-end min-h-full pb-4">
+      {/* Main Content Area */}
+      <main className="flex-1 w-full max-w-2xl mx-auto overflow-y-auto px-4 py-5 flex flex-col scroll-smooth" ref={scrollRef}>
 
-          {/* Welcome Message Empty State or Normal Messages */}
-          {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full text-center space-y-4 opacity-50 my-auto">
-              <div className="w-20 h-20 rounded-3xl bg-slate-800/50 flex items-center justify-center border border-white/5 shadow-2xl">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
-              </div>
-              <p className="text-lg font-medium">Start a conversation to get civic assistance.</p>
+        {messages.length === 0 ? (
+          /* Home View / Empty State */
+          <div className="flex flex-col gap-6 animate-in fade-in duration-300">
+            {/* Welcome Card */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mt-2">
+              <h2 className="text-[24px] font-medium text-[#0A2540] leading-tight mb-4">
+                Hello, resident! I'm Montgo-Talk. <span className="inline-block origin-bottom-right hover:animate-waving-hand">👋</span>
+              </h2>
+              <p className="text-[17px] text-[#334b61] mb-5 leading-relaxed">
+                How can I help you navigate your city today?
+              </p>
+              <p className="text-[15px] text-[#5a768f]">
+                I answer questions using official City of Montgomery data.
+              </p>
             </div>
-          )}
 
-          {messages.map((msg, idx) => (
-            <div
-              key={idx}
-              className={`flex w-full group animate-in slide-in-from-bottom-2 fade-in duration-300 ${msg.role === "user" ? "justify-end" : "justify-start"
-                }`}
+            <div className="mt-2">
+              <h3 className="text-[17px] font-medium text-[#4a6b8c] mb-3 px-1">Common Requests</h3>
+              <div className="flex flex-col gap-3">
+                {commonRequests.map((req, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleSend(req.query)}
+                    className="flex items-center gap-4 bg-white p-3 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow active:bg-gray-50 text-left w-full group"
+                  >
+                    <div className="w-14 h-14 rounded-xl bg-[#002244] text-[#DEAC35] flex items-center justify-center shrink-0 group-hover:bg-[#003366] transition-colors">
+                      {req.icon}
+                    </div>
+                    <span className="text-[17px] font-medium text-[#0A2540]">{req.title}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Chat View */
+          <div className="flex flex-col gap-6 min-h-full pb-4">
+
+            <button
+              onClick={() => setMessages([])}
+              className="group flex items-center gap-2 text-[#003366] font-semibold text-[16px] py-1 hover:opacity-80 transition-opacity self-start"
             >
-              <div className={`relative flex max-w-[85%] md:max-w-[70%] items-end gap-2 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4 group-hover:-translate-x-1 transition-transform">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+              </svg>
+              Back to Home
+            </button>
 
-                {/* Avatar for Assistant */}
-                {msg.role === "assistant" && (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex flex-shrink-0 items-center justify-center text-slate-950 font-bold text-sm ring-2 ring-slate-950 shadow-md transform transition-transform group-hover:scale-105">
-                    M
+            <div className="relative flex items-center py-2">
+              <div className="flex-grow border-t border-gray-200"></div>
+              <span className="flex-shrink-0 mx-4 text-gray-400 text-sm">Today</span>
+              <div className="flex-grow border-t border-gray-200"></div>
+            </div>
+
+            {messages.map((msg, idx) => (
+              <div
+                key={idx}
+                className={`flex w-full ${msg.role === "user" ? "justify-end" : "justify-start"} animate-in fade-in duration-300`}
+              >
+                <div className={`flex max-w-[85%] sm:max-w-[75%] gap-2 items-start ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
+
+                  {/* Avatar User */}
+                  {msg.role === "user" && (
+                    <div className="w-10 h-10 rounded-full bg-[#003366] flex shrink-0 items-center justify-center mt-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-white">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                      </svg>
+                    </div>
+                  )}
+
+                  {/* Avatar Assistant */}
+                  {msg.role === "assistant" && (
+                    <div className="w-10 h-10 rounded-full bg-[#DEAC35] flex shrink-0 items-center justify-center mt-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-[#003366]">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 0 1-.923 1.785A5.969 5.969 0 0 0 6 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337Z" />
+                      </svg>
+                    </div>
+                  )}
+
+                  {/* Message Bubble */}
+                  <div
+                    className={`px-5 py-4 rounded-[20px] text-[16px] leading-relaxed shadow-sm ${msg.role === "user"
+                        ? "bg-[#003366] text-white rounded-tr-sm"
+                        : "bg-white text-gray-800 border border-gray-100 rounded-tl-sm"
+                      }`}
+                  >
+                    {msg.content}
                   </div>
-                )}
-
-                {/* Message Bubble */}
-                <div
-                  className={`relative px-5 py-3.5 rounded-2xl text-[15px] leading-relaxed shadow-lg backdrop-blur-md transition-all ${msg.role === "user"
-                    ? "bg-blue-600/90 text-white rounded-br-sm border border-blue-500/50 shadow-blue-900/20"
-                    : "bg-slate-800/80 text-slate-200 rounded-bl-sm border border-slate-700/50 shadow-slate-900/50"
-                    }`}
-                >
-                  {msg.content}
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
 
-          {/* Loading Indicator */}
-          {isLoading && (
-            <div className="flex w-full justify-start animate-in fade-in duration-300">
-              <div className="relative flex max-w-[85%] items-end gap-2">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-amber-700 flex flex-shrink-0 items-center justify-center text-slate-950 font-bold text-sm ring-2 ring-slate-950 shadow-md">
-                  M
-                </div>
-                <div className="bg-slate-800/80 backdrop-blur-md border border-slate-700/50 rounded-2xl rounded-bl-sm px-5 py-4 shadow-lg flex items-center gap-1.5 h-[52px]">
-                  <div className="w-2 h-2 bg-amber-500 rounded-full animate-[bounce_1s_infinite_-0.3s]"></div>
-                  <div className="w-2 h-2 bg-amber-500 rounded-full animate-[bounce_1s_infinite_-0.15s]"></div>
-                  <div className="w-2 h-2 bg-amber-500 rounded-full animate-[bounce_1s_infinite]"></div>
+            {/* Loading Indicator */}
+            {isLoading && (
+              <div className="flex w-full justify-start animate-in fade-in duration-300">
+                <div className="flex max-w-[85%] gap-2 items-start">
+                  <div className="w-10 h-10 rounded-full bg-[#DEAC35] flex shrink-0 items-center justify-center mt-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-[#003366]">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 0 1-.923 1.785A5.969 5.969 0 0 0 6 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337Z" />
+                    </svg>
+                  </div>
+                  <div className="bg-white border border-gray-100 rounded-[20px] rounded-tl-sm px-5 py-5 shadow-sm flex items-center gap-1.5 h-[56px] mt-0.5">
+                    <div className="w-2.5 h-2.5 bg-gray-400 rounded-full animate-[bounce_1s_infinite_-0.3s]"></div>
+                    <div className="w-2.5 h-2.5 bg-gray-400 rounded-full animate-[bounce_1s_infinite_-0.15s]"></div>
+                    <div className="w-2.5 h-2.5 bg-gray-400 rounded-full animate-[bounce_1s_infinite]"></div>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </main>
 
       {/* Input Area */}
-      <footer className="relative z-20 w-full px-4 py-5 sm:px-6 bg-slate-950/80 backdrop-blur-xl border-t border-white/5 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
-        <div className="max-w-4xl mx-auto">
-          <form onSubmit={sendMessage} className="relative flex items-center group">
-            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-amber-500 opacity-20 group-hover:opacity-40 transition-opacity blur-md"></div>
+      <footer className="w-full px-3 py-3 sm:px-4 bg-white border-t border-gray-100 z-20 shrink-0 shadow-[0_-4px_10px_-1px_rgba(0,0,0,0.03)] pb-6 pt-4">
+        <div className="max-w-2xl mx-auto flex items-end gap-2">
 
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about garbage collection, permits, alerts..."
-              disabled={isLoading}
-              className="relative w-full bg-slate-900/90 border border-slate-700 rounded-full pl-6 pr-16 py-4 lg:py-5 text-[15px] sm:text-base text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all shadow-inner disabled:bg-slate-900/50 disabled:text-slate-500"
-            />
-
-            <button
-              type="submit"
-              disabled={isLoading || !input.trim()}
-              className="absolute right-2 sm:right-3 top-2 bottom-2 lg:top-2.5 lg:bottom-2.5 bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 aspect-square rounded-full flex items-center justify-center transition-all shadow-md hover:shadow-[0_0_15px_rgba(245,158,11,0.5)] disabled:opacity-40 disabled:hover:from-amber-500 disabled:hover:to-amber-600 disabled:shadow-none hover:scale-105 active:scale-95 group/btn"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="w-5 h-5 sm:w-6 sm:h-6 ml-0.5 transform transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5"
-              >
-                <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
-              </svg>
-            </button>
-          </form>
-
-          <div className="flex items-center justify-center gap-2 mt-4 text-[11px] sm:text-xs text-slate-500 font-medium tracking-wide">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-amber-500/70">
-              <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
-            </svg>
-            <span>Powered by <span className="text-slate-400">Gemini AI</span> & <span className="text-slate-400">Bright Data</span></span>
+          <div className="relative flex-1">
+            <form onSubmit={onSubmit}>
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Ask about city services, sanitat..."
+                disabled={isLoading}
+                className="w-full bg-[#f4f7f6] border border-gray-200 rounded-2xl pl-5 pr-4 py-4 text-[16px] text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-300 focus:border-transparent transition-all disabled:bg-gray-100 disabled:text-gray-500"
+              />
+            </form>
           </div>
+
+          <button
+            onClick={() => handleSend(input)}
+            disabled={isLoading || !input.trim()}
+            className="w-[56px] h-[56px] shrink-0 bg-[#7a9bb7] hover:bg-[#6888a3] active:bg-[#5b7891] text-white rounded-[18px] flex items-center justify-center transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-[26px] h-[26px] -ml-0.5 -mt-0.5 transform rotate-0 opacity-90">
+              <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
+            </svg>
+          </button>
+
         </div>
       </footer>
+
     </div>
   );
 }
